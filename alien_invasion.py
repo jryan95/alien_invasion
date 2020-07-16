@@ -60,6 +60,9 @@ class AlienInvasion:
             sys.exit()
         elif event.key == pygame.K_f:
             self._toggle_fullscreen()
+        
+        if event.key == pygame.K_SPACE:
+            # shoot bullet code here
     
     def _check_keyup_events(self, event):
         """Respond to keypresses."""
