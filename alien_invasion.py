@@ -7,6 +7,7 @@ from ship import Ship
 from bullet import Bullet
 from alien import Alien
 
+
 class AlienInvasion:
     """Overall class to manage game assets and behavior."""
 
@@ -16,7 +17,9 @@ class AlienInvasion:
         self.settings = Settings()
 
         # Set the display size - Default: Windowed
-        self._toggle_fullscreen()
+        self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        self.settings.screen_height = self.screen.get_rect().height
+        self.settings.screen_width = self.screen.get_rect().width
         pygame.display.set_caption("Alien Invasion")
 
         self.ship = Ship(self)
@@ -34,18 +37,18 @@ class AlienInvasion:
             self._update_aliens()
             self._update_screen()
     
-    def _toggle_fullscreen(self):
-        if self.settings.toggle_fullscreen:
-            self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-            self.settings.screen_width = self.screen.get_rect().width
-            self.settings.screen_height = self.screen.get_rect().height
+    # def _toggle_fullscreen(self):
+    #     if self.settings.toggle_fullscreen:
+    #         self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+    #         self.settings.screen_width = self.screen.get_rect().width
+    #         self.settings.screen_height = self.screen.get_rect().height
 
-            self.settings.toggle_fullscreen = False
-        else:
-            self.screen = pygame.display.set_mode(
-                (self.settings.screen_width, self.settings.screen_height))
+    #         self.settings.toggle_fullscreen = False
+    #     else:
+    #         self.screen = pygame.display.set_mode(
+    #             (self.settings.screen_width, self.settings.screen_height))
                 
-            self.settings.toggle_fullscreen = True
+    #         self.settings.toggle_fullscreen = True
 
     def _check_events(self):
         """Respond to keypresses and mouse events."""
@@ -66,10 +69,11 @@ class AlienInvasion:
             self.ship.moving_left = True
         elif event.key == pygame.K_q:
             sys.exit()
-        elif event.key == pygame.K_f:
-            self._toggle_fullscreen()
         elif event.key == pygame.K_SPACE:
             self._fire_bullet()
+        
+        if event.key == pygame.K_f:
+            self._toggle_fullscreen()
     
     def _check_keyup_events(self, event):
         """Respond to keypresses."""
@@ -93,6 +97,16 @@ class AlienInvasion:
         for bullet in self.bullets.copy():
             if bullet.rect.bottom <= 0:
                 self.bullets.remove(bullet)
+        
+        # Check for any bullets that have hit aliens.
+        #  If so, get rid of the bullet and the aliens.
+        collisions = pygame.sprite.groupcollide(
+            self.bullets, self.aliens, False, True)
+
+        if not self.aliens:
+            # Destroy existing bullets and create new fleet.
+            self.bullets.empty()
+            self._create_fleet()
 
     def _create_fleet(self):
         """Create the fleet of aliens."""
@@ -132,6 +146,7 @@ class AlienInvasion:
     
     def _change_fleet_direction(self):
         """Drop the entire fleet and change the fleet's direction."""
+        
         for alien in self.aliens.sprites():
             alien.rect.y += self.settings.fleet_drop_speed
         self.settings.fleet_direction *= -1
