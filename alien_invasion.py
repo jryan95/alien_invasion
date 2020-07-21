@@ -17,9 +17,7 @@ class AlienInvasion:
         self.settings = Settings()
 
         # Set the display size - Default: Windowed
-        self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-        self.settings.screen_height = self.screen.get_rect().height
-        self.settings.screen_width = self.screen.get_rect().width
+        self.screen = pygame.display.set_mode((self.settings.screen_width, self.settings.screen_height))
         pygame.display.set_caption("Alien Invasion")
 
         self.ship = Ship(self)
@@ -72,8 +70,8 @@ class AlienInvasion:
         elif event.key == pygame.K_SPACE:
             self._fire_bullet()
         
-        if event.key == pygame.K_f:
-            self._toggle_fullscreen()
+        # if event.key == pygame.K_f:
+        #     self._toggle_fullscreen()
     
     def _check_keyup_events(self, event):
         """Respond to keypresses."""
@@ -98,11 +96,14 @@ class AlienInvasion:
             if bullet.rect.bottom <= 0:
                 self.bullets.remove(bullet)
         
-        # Check for any bullets that have hit aliens.
-        #  If so, get rid of the bullet and the aliens.
-        collisions = pygame.sprite.groupcollide(
-            self.bullets, self.aliens, False, True)
+        self._check_bullet_alien_collisions()
 
+    def _check_bullet_alien_collisions(self):
+        """ Respond to bullet-alien collisions. """
+        # Remove any bullets and aliens that have collided.
+        collisions = pygame.sprite.groupcollide(
+            self.bullets, self.aliens, True, True)
+        
         if not self.aliens:
             # Destroy existing bullets and create new fleet.
             self.bullets.empty()
@@ -149,6 +150,7 @@ class AlienInvasion:
         
         for alien in self.aliens.sprites():
             alien.rect.y += self.settings.fleet_drop_speed
+            
         self.settings.fleet_direction *= -1
 
     def _update_aliens(self):
@@ -158,6 +160,10 @@ class AlienInvasion:
         """
         self._check_fleet_edges()
         self.aliens.update()
+
+        # Look for alien-ship collisions.
+        if pygame.sprite.spritecollideany(self.ship, self.aliens):
+            print("Ship hit!!")
 
     def _update_screen(self):
         """Update images on the screen, and flip to the new screen."""
